@@ -36,12 +36,39 @@ def load_json_file(file_path):
         print("Error decoding JSON.")
         return None
 
+def get_user_filters():
+    including = ["watched", "watching", "want to watch", "stalled", "dropped"]
+    
+    print("Enter the numbers of the statuses you want to keep (comma-separated, e.g., 1,2) ")
+    print("[1: watched, 2: watching, 3: want to watch, 4: stalled, 5: dropped]")
+    print("Or press enter for default: watched only")
+    
+    keep_indices = input()
+    
+    if keep_indices:
+        try:
+            keep_indices = [int(index.strip())-1 for index in keep_indices.split(",")]
+            # Remove the specified indices from the list
+            including = [item for index, item in enumerate(including) if index in keep_indices]
+            
+        except ValueError:
+            print("Invalid input. Please enter comma-separated indices.")
+            return my_func()
+    else:
+        #print("Default action")
+        keep_indices = "0"
+        keep_indices = [int(index.strip()) for index in keep_indices.split(",")]
+        # Remove the specified indices from the list
+        including = [item for index, item in enumerate(including) if index in keep_indices]
+    
+    print("Keeping only:", including)
+    return including
+
 
 def filter_anime(json_data):
-    ''' Filter out anime by status. Later add functionality to make this interactive?'''
+    ''' Filter out anime by status.'''
     
-    #including = ["watching", "watched"]
-    including = ["watched"]
+    including = get_user_filters()
     filtered = []
     
     for entry in json_data['entries']:
