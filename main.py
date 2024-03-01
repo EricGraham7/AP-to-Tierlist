@@ -135,22 +135,37 @@ def export_as_json(input_data):
         json.dump(my_data, json_file, indent=4)
     return my_data
 
+def main():
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <filename>")
+        return 1
 
-#main:
-json_data = load_json_file("mylist.json")
-print("Anime Planet export loaded")
+    filename = sys.argv[1]
 
-filtered = filter_anime(json_data)
-print("Successfully filtered anime")
+    # Example usage
+    json_data = load_json_file(filename)
 
-full_data = get_all_images_urls(filtered)
-print("Obtained image links via Jikan API")
+    if json_data:
+        print("Anime Planet export loaded")
 
-actually_full_data = download_images(full_data, output_dir="images")
-print("Downloaded images to local directory")
+        filtered = filter_anime(json_data)
+        print("Successfully filtered anime")
 
-actually_full_data = get_Data_URLs(actually_full_data)
-print("Converted images to Data URL")
+        full_data = get_all_images_urls(filtered)
+        print("Obtained image links via Jikan API")
 
-actually_full_data = export_as_json(actually_full_data)
-print("Successfully exported as .json file to load into Tiers Master")
+        actually_full_data = download_images(full_data, output_dir="images")
+        print("Downloaded images to local directory")
+
+        actually_full_data = get_Data_URLs(actually_full_data)
+        print("Converted images to Data URL")
+
+        actually_full_data = export_as_json(actually_full_data)
+        print("Successfully exported as .json file to load into Tiers Master")
+        
+        #print(json.dumps(json_data, indent=4))
+    else:
+        print("Failed to load JSON data.")
+        
+if __name__ == "__main__":
+    main()
