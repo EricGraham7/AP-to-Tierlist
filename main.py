@@ -53,7 +53,7 @@ def get_user_filters():
             
         except ValueError:
             print("Invalid input. Please enter comma-separated indices.")
-            return my_func()
+            return get_user_filters()
     else:
         #print("Default action")
         keep_indices = "0"
@@ -61,7 +61,7 @@ def get_user_filters():
         # Remove the specified indices from the list
         including = [item for index, item in enumerate(including) if index in keep_indices]
     
-    print("Keeping only:", including)
+    print("-- Keeping only:", including)
     return including
 
 
@@ -138,7 +138,35 @@ def get_Data_URLs(data):
     for name, status, rating, url, location in data:
         final_list.append((name, status, rating, image_to_data_url(location)))
     return final_list
+
+def get_user_export_choice():
+
+    print("Enter 1 to set up the tierlist or 2 to auto-complete it")
     
+    user_choice = input()
+    
+    if user_choice:
+        try:
+            if(int(user_choice) == 1):
+                print("-- Will export as prepared tierlist.")
+                return int(user_choice)
+            elif(int(user_choice) == 2):
+                print("-- Will export as auto-completed tierlist.")
+                return int(user_choice)
+            else:
+                #retry recursively
+                print("Invalid input. Please enter either 1 or 2")
+                return get_user_export_choice()
+            
+        except ValueError:
+            #retry recursively
+            print("Invalid input. Please enter either 1 or 2")
+            return get_user_export_choice()
+    else:
+        #retry recursively
+        print("Invalid input. Please enter either 1 or 2")
+        return get_user_export_choice()
+
 def export_as_json(input_data):
     my_data = {'title': 'My TierList',
         'rows': [{'name': 'S', 'imgs': []},
@@ -162,6 +190,38 @@ def export_as_json(input_data):
         json.dump(my_data, json_file, indent=4)
     return my_data
 
+def export_and_auto_complete(input_data):
+    my_data = {'title': 'My TierList',
+        'rows': [{'name': 'S', 'imgs': []},
+        {'name': 'A', 'imgs': []},
+        {'name': 'B', 'imgs': []},
+        {'name': 'C', 'imgs': []},
+        {'name': 'D', 'imgs': []},
+        {'name': 'F', 'imgs': []}],
+        'untiered': []}
+    
+    for name, status, rating, data_URL in input_data:
+        if(rating == 5):
+            my_data['rows'][0]['imgs'].append(data_URL)
+        elif(rating >= 4):
+            my_data['rows'][1]['imgs'].append(data_URL)
+        elif(rating >= 3):
+            my_data['rows'][2]['imgs'].append(data_URL)
+        elif(rating >= 2):
+            my_data['rows'][3]['imgs'].append(data_URL)
+        elif(rating >= 1):
+            my_data['rows'][4]['imgs'].append(data_URL)
+        elif(rating == 0.5):
+            my_data['rows'][4]['imgs'].append(data_URL)
+        else:
+            my_data['untiered'].append(data_URL)
+    
+    filename = "AUTO_AP_to_tierlist_export.json"
+    
+    with open(filename, "w") as json_file:
+        json.dump(my_data, json_file, indent=4)
+    return my_data
+
 def main():
     if len(sys.argv) < 2:
         print(f"Usage: {sys.argv[0]} <filename>")
@@ -175,19 +235,24 @@ def main():
     if json_data:
         print("Anime Planet export loaded")
 
-        filtered = filter_anime(json_data)
+        anime_data_pipe = filter_anime(json_data)
         print("Successfully filtered anime")
 
-        full_data = get_all_images_urls(filtered)
+        export_mode = get_user_export_choice()
+
+        anime_data_pipe = get_all_images_urls(anime_data_pipe)
         print("Obtained image links via Jikan API")
 
-        actually_full_data = download_images(full_data, output_dir="images")
+        anime_data_pipe = download_images(anime_data_pipe, output_dir="images")
         print("Downloaded images to local directory")
 
-        actually_full_data = get_Data_URLs(actually_full_data)
+        anime_data_pipe = get_Data_URLs(anime_data_pipe)
         print("Converted images to Data URL")
 
-        actually_full_data = export_as_json(actually_full_data)
+        if(export_mode == 1):
+            anime_data_pipe = export_as_json(anime_data_pipe)
+        else:
+            anime_data_pipe = export_and_auto_complete(anime_data_pipe)
         print("Successfully exported as .json file to load into Tiers Master")
         
         #print(json.dumps(json_data, indent=4))
