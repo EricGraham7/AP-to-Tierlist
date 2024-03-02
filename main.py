@@ -191,6 +191,13 @@ def export_as_json(input_data):
     return my_data
 
 def export_and_auto_complete(input_data):
+
+    modify_scheme = get_user_rating_scheme_choice()
+    if(modify_scheme == 1):
+        S, A, B, C, D, F = 10,8,6,4,2,1
+    else:
+        S, A, B, C, D, F = get_user_rating_scheme()
+
     my_data = {'title': 'My TierList',
         'rows': [{'name': 'S', 'imgs': []},
         {'name': 'A', 'imgs': []},
@@ -201,18 +208,18 @@ def export_and_auto_complete(input_data):
         'untiered': []}
     
     for name, status, rating, data_URL in input_data:
-        if(rating == 5):
+        if(rating >= S/2.0):
             my_data['rows'][0]['imgs'].append(data_URL)
-        elif(rating >= 4):
+        elif(rating >= A/2.0):
             my_data['rows'][1]['imgs'].append(data_URL)
-        elif(rating >= 3):
+        elif(rating >= B/2.0):
             my_data['rows'][2]['imgs'].append(data_URL)
-        elif(rating >= 2):
+        elif(rating >= C/2.0):
             my_data['rows'][3]['imgs'].append(data_URL)
-        elif(rating >= 1):
+        elif(rating >= D/2.0):
             my_data['rows'][4]['imgs'].append(data_URL)
-        elif(rating == 0.5):
-            my_data['rows'][4]['imgs'].append(data_URL)
+        elif(rating >= F/2.0):
+            my_data['rows'][5]['imgs'].append(data_URL)
         else:
             my_data['untiered'].append(data_URL)
     
@@ -221,6 +228,63 @@ def export_and_auto_complete(input_data):
     with open(filename, "w") as json_file:
         json.dump(my_data, json_file, indent=4)
     return my_data
+
+
+def get_user_rating_scheme_choice():
+
+    print("The predefined scheme is: [S:10, A:8-9, B:6-7, C:4-5, D:2-3, F:1]")
+    print("Enter 1 to use the predefined rating scheme or 2 to modify it")
+    
+    user_choice = input()
+    
+    if user_choice:
+        try:
+            if(int(user_choice) == 1):
+                return int(user_choice)
+            elif(int(user_choice) == 2):
+                return int(user_choice)
+            else:
+                #retry recursively
+                print("Invalid input. Please enter either 1 or 2")
+                return get_user_export_choice()
+            
+        except ValueError:
+            #retry recursively
+            print("Invalid input. Please enter either 1 or 2")
+            return get_user_export_choice()
+    else:
+        #retry recursively
+        print("Invalid input. Please enter either 1 or 2")
+        return get_user_export_choice()
+
+def get_user_rating_scheme():
+    rating_scheme = tuple()
+    for letter in ['S', 'A', 'B', 'C', 'D', 'F']:
+        print("Enter a minimum value for", letter)
+        rating_scheme = rating_scheme + (get_user_rating_scheme_helper(),)    #could add a check here for successive entries being strictly smaller. For now, hope user is logical
+    return rating_scheme
+
+def get_user_rating_scheme_helper():
+    user_choice = input()
+    if user_choice:
+        try:
+            selected_rating = int(user_choice)
+            if(selected_rating >= 0 and selected_rating <= 10):
+                return selected_rating
+            else:
+                #retry recursively
+                print("Invalid input. Please enter either 1 or 2")
+                return get_user_rating_scheme_helper()
+            
+        except ValueError:
+            #retry recursively
+            print("Invalid input. Please enter a number between 0 and 10 (inclusive)")
+            return get_user_rating_scheme_helper()
+    else:
+        #retry recursively
+        print("Invalid input. Please enter a number between 0 and 10 (inclusive)")
+        return get_user_rating_scheme_helper()
+
 
 def main():
     if len(sys.argv) < 2:
